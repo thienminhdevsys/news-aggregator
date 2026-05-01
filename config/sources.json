@@ -1,0 +1,36 @@
+{
+  "sources": [
+    {
+      "name": "VnExpress",
+      "url": "https://vnexpress.net/rss/tin-moi-nhat.rss",
+      "category": "Tin tức tổng hợp",
+      "enabled": true
+    },
+    {
+      "name": "Tuổi Trẻ",
+      "url": "https://tuoitre.vn/rss/tin-moi-nhat.rss",
+      "category": "Tin tức tổng hợp",
+      "enabled": true
+    },
+    {
+      "name": "Thanh Niên",
+      "url": "https://thanhnien.vn/rss/home.rss",
+      "category": "Tin tức tổng hợp",
+      "enabled": true
+    },
+    {
+      "name": "VnExpress - Công nghệ",
+      "url": "https://vnexpress.net/rss/so-hoa.rss",
+      "category": "Công nghệ",
+      "enabled": true
+    },
+    {
+      "name": "VnExpress - Kinh doanh",
+      "url": "https://vnexpress.net/rss/kinh-doanh.rss",
+      "category": "Kinh tế",
+      "enabled": true
+    }
+  ],
+  "updateInterval": "1h",
+  "maxArticlesPerSource": 10
+}

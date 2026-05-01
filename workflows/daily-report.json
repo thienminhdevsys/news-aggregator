@@ -1,0 +1,142 @@
+{
+  "name": "Daily Report",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "name": "Schedule Daily 8AM",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const fs = require('fs');\nconst path = require('path');\n\nconst today = new Date().toISOString().split('T')[0];\nconst dataDir = 'C:\\\\Users\\\\admin\\\\projects\\\\news-aggregator\\\\data\\\\news';\nconst filePath = path.join(dataDir, `${today}.json`);\n\nif (!fs.existsSync(filePath)) {\n  return [{\n    json: {\n      date: new Date().toLocaleDateString('vi-VN', {\n        timeZone: 'Asia/Ho_Chi_Minh',\n        day: '2-digit',\n        month: '2-digit',\n        year: 'numeric'\n      }),\n      totalArticles: 0,\n      totalSources: 0,\n      totalCategories: 0,\n      categories: [],\n      message: 'Không có dữ liệu cho hôm nay'\n    }\n  }];\n}\n\nconst articles = JSON.parse(fs.readFileSync(filePath, 'utf8'));\n\nconst categories = {};\narticles.forEach(article => {\n  const cat = article.category || 'Khác';\n  if (!categories[cat]) {\n    categories[cat] = [];\n  }\n  categories[cat].push(article);\n});\n\nconst categoryArray = Object.keys(categories).map(name => ({\n  name,\n  articles: categories[name]\n}));\n\nreturn [{\n  json: {\n    date: new Date().toLocaleDateString('vi-VN', {\n      timeZone: 'Asia/Ho_Chi_Minh',\n      day: '2-digit',\n      month: '2-digit',\n      year: 'numeric'\n    }),\n    totalArticles: articles.length,\n    totalSources: [...new Set(articles.map(a => a.source))].length,\n    totalCategories: categoryArray.length,\n    categories: categoryArray\n  }\n}];"
+      },
+      "name": "Load Today Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const fs = require('fs');\n\nconst templatePath = 'C:\\\\Users\\\\admin\\\\projects\\\\news-aggregator\\\\templates\\\\email-report.html';\nlet templateContent = fs.readFileSync(templatePath, 'utf8');\n\nconst data = items[0].json;\n\nlet html = templateContent;\nhtml = html.replace('{{date}}', data.date);\nhtml = html.replace('{{totalArticles}}', data.totalArticles);\nhtml = html.replace('{{totalSources}}', data.totalSources);\nhtml = html.replace('{{totalCategories}}', data.totalCategories);\n\nlet categoriesHtml = '';\ndata.categories.forEach(category => {\n  categoriesHtml += `\n    <div class=\"news-section\">\n      <h2 class=\"category-title\">${category.name}</h2>\n  `;\n  \n  category.articles.forEach(article => {\n    categoriesHtml += `\n      <div class=\"news-item\">\n        <div class=\"news-title\">\n          <a href=\"${article.link}\" target=\"_blank\">${article.title}</a>\n        </div>\n        <div class=\"news-meta\">\n          <span class=\"news-source\">${article.source}</span> •\n          <span>${article.pubDate}</span>\n        </div>\n        <div class=\"news-description\">\n          ${article.description}\n        </div>\n      </div>\n    `;\n  });\n  \n  categoriesHtml += `</div>`;\n});\n\nhtml = html.replace('{{#each categories}}', '');\nhtml = html.replace('{{/each}}', '');\nhtml = html.replace('{{this.name}}', '');\nhtml = html.replace('{{#each this.articles}}', '');\nhtml = html.replace('{{this.link}}', '');\nhtml = html.replace('{{this.title}}', '');\nhtml = html.replace('{{this.source}}', '');\nhtml = html.replace('{{this.pubDate}}', '');\nhtml = html.replace('{{this.description}}', '');\n\nconst insertPosition = html.indexOf('<div class=\"footer\">');\nhtml = html.slice(0, insertPosition) + categoriesHtml + html.slice(insertPosition);\n\nreturn [{\n  json: {\n    html,\n    subject: `📰 Báo cáo Tin tức - ${data.date}`,\n    totalArticles: data.totalArticles\n  }\n}];"
+      },
+      "name": "Generate HTML Email",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{$json.totalArticles}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "name": "Check Has Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "your-email@gmail.com",
+        "subject": "={{$json.subject}}",
+        "emailType": "html",
+        "message": "={{$json.html}}"
+      },
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 1,
+      "position": [1050, 200],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [{\n  json: {\n    message: 'Không có dữ liệu để gửi báo cáo',\n    timestamp: new Date().toLocaleString('vi-VN', {\n      timeZone: 'Asia/Ho_Chi_Minh'\n    })\n  }\n}];"
+      },
+      "name": "No Data Message",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 400]
+    }
+  ],
+  "connections": {
+    "Schedule Daily 8AM": {
+      "main": [
+        [
+          {
+            "node": "Load Today Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Today Data": {
+      "main": [
+        [
+          {
+            "node": "Generate HTML Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate HTML Email": {
+      "main": [
+        [
+          {
+            "node": "Check Has Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Has Data": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Data Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "2"
+}

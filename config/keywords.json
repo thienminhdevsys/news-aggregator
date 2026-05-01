@@ -1,0 +1,22 @@
+{
+  "keywords": {
+    "include": [
+      "AI",
+      "trí tuệ nhân tạo",
+      "công nghệ",
+      "startup",
+      "đầu tư",
+      "kinh tế",
+      "chứng khoán",
+      "bitcoin",
+      "blockchain"
+    ],
+    "exclude": [
+      "tai nạn",
+      "tử vong",
+      "bạo lực"
+    ]
+  },
+  "filterMode": "any",
+  "caseSensitive": false
+}

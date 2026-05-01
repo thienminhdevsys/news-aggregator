@@ -1,0 +1,150 @@
+{
+  "name": "News Collector",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const fs = require('fs');\nconst configPath = 'C:\\\\Users\\\\admin\\\\projects\\\\news-aggregator\\\\config\\\\sources.json';\nconst config = JSON.parse(fs.readFileSync(configPath, 'utf8'));\n\nconst enabledSources = config.sources.filter(s => s.enabled);\n\nreturn enabledSources.map(source => ({\n  json: source\n}));"
+      },
+      "name": "Load RSS Sources",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "={{$json.url}}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Fetch RSS Feed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "mode": "xmlToJson",
+        "options": {}
+      },
+      "name": "Parse XML",
+      "type": "n8n-nodes-base.xml",
+      "typeVersion": 1,
+      "position": [850, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const source = items[0].json;\nconst rss = items[0].json.rss?.channel?.[0];\n\nif (!rss || !rss.item) {\n  return [];\n}\n\nconst articles = rss.item.slice(0, 10);\n\nconst results = articles.map((article, index) => {\n  const title = Array.isArray(article.title) ? article.title[0] : article.title;\n  const link = Array.isArray(article.link) ? article.link[0] : article.link;\n  const description = Array.isArray(article.description) ? article.description[0] : article.description;\n  const pubDate = Array.isArray(article.pubDate) ? article.pubDate[0] : article.pubDate;\n  \n  return {\n    json: {\n      id: `${source.name.toLowerCase().replace(/\\s+/g, '-')}-${Date.now()}-${index}`,\n      title: title || '',\n      link: link || '',\n      description: (description || '').replace(/<[^>]*>/g, ''),\n      source: source.name,\n      category: source.category,\n      pubDate: new Date(pubDate).toLocaleString('vi-VN', {\n        timeZone: 'Asia/Ho_Chi_Minh',\n        day: '2-digit',\n        month: '2-digit',\n        year: 'numeric',\n        hour: '2-digit',\n        minute: '2-digit'\n      }),\n      collectedAt: new Date().toLocaleString('vi-VN', {\n        timeZone: 'Asia/Ho_Chi_Minh',\n        day: '2-digit',\n        month: '2-digit',\n        year: 'numeric',\n        hour: '2-digit',\n        minute: '2-digit'\n      })\n    }\n  };\n});\n\nreturn results;"
+      },
+      "name": "Extract Articles",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const fs = require('fs');\nconst configPath = 'C:\\\\Users\\\\admin\\\\projects\\\\news-aggregator\\\\config\\\\keywords.json';\nconst config = JSON.parse(fs.readFileSync(configPath, 'utf8'));\n\nconst includeKeywords = config.keywords.include.map(k => k.toLowerCase());\nconst excludeKeywords = config.keywords.exclude.map(k => k.toLowerCase());\n\nconst filtered = items.filter(item => {\n  const text = (item.json.title + ' ' + item.json.description).toLowerCase();\n  \n  const hasExclude = excludeKeywords.some(keyword => text.includes(keyword));\n  if (hasExclude) return false;\n  \n  const hasInclude = includeKeywords.some(keyword => text.includes(keyword));\n  return hasInclude;\n});\n\nreturn filtered;"
+      },
+      "name": "Filter by Keywords",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const fs = require('fs');\nconst path = require('path');\n\nconst today = new Date().toISOString().split('T')[0];\nconst dataDir = 'C:\\\\Users\\\\admin\\\\projects\\\\news-aggregator\\\\data\\\\news';\nconst filePath = path.join(dataDir, `${today}.json`);\n\nlet existingData = [];\nif (fs.existsSync(filePath)) {\n  existingData = JSON.parse(fs.readFileSync(filePath, 'utf8'));\n}\n\nconst newArticles = items.map(item => item.json);\nconst existingIds = existingData.map(a => a.id);\nconst uniqueArticles = newArticles.filter(a => !existingIds.includes(a.id));\n\nconst allArticles = [...existingData, ...uniqueArticles];\nfs.writeFileSync(filePath, JSON.stringify(allArticles, null, 2), 'utf8');\n\nreturn [{\n  json: {\n    message: `Đã lưu ${uniqueArticles.length} tin mới`,\n    total: allArticles.length,\n    file: filePath,\n    timestamp: new Date().toLocaleString('vi-VN', {\n      timeZone: 'Asia/Ho_Chi_Minh'\n    })\n  }\n}];"
+      },
+      "name": "Save to JSON",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1450, 300]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Load RSS Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load RSS Sources": {
+      "main": [
+        [
+          {
+            "node": "Fetch RSS Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch RSS Feed": {
+      "main": [
+        [
+          {
+            "node": "Parse XML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse XML": {
+      "main": [
+        [
+          {
+            "node": "Extract Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Articles": {
+      "main": [
+        [
+          {
+            "node": "Filter by Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter by Keywords": {
+      "main": [
+        [
+          {
+            "node": "Save to JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "id": "1"
+}

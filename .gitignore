@@ -1,0 +1,32 @@
+# .gitignore
+
+# Node modules
+node_modules/
+
+# n8n data
+.n8n/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# Data files (optional - uncomment if you don't want to commit collected news)
+# data/news/*.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Credentials (IMPORTANT - never commit)
+*credentials*.json
+*secret*.json
