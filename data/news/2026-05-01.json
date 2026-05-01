@@ -1,8 +1,32 @@
 [
   {
-    "id": "test-1",
-    "title": "Test Article",
-    "source": "Test",
-    "collectedAt": "15:41:09 1/5/2026"
+    "id": "vnexpress-1",
+    "title": "AI ChatGPT ra mắt tính năng mới cho doanh nghiệp",
+    "link": "https://vnexpress.net/ai-chatgpt-ra-mat-tinh-nang-moi.html",
+    "description": "OpenAI công bố tính năng mới giúp doanh nghiệp tích hợp AI vào quy trình làm việc",
+    "source": "VnExpress",
+    "category": "Công nghệ",
+    "pubDate": "01/05/2026 15:30",
+    "collectedAt": "01/05/2026 16:00"
+  },
+  {
+    "id": "vnexpress-2",
+    "title": "Startup Việt gọi vốn thành công 10 triệu USD",
+    "link": "https://vnexpress.net/startup-viet-goi-von-thanh-cong.html",
+    "description": "Startup công nghệ tài chính Việt Nam vừa hoàn tất vòng gọi vốn Series A",
+    "source": "VnExpress",
+    "category": "Kinh tế",
+    "pubDate": "01/05/2026 14:20",
+    "collectedAt": "01/05/2026 16:00"
+  },
+  {
+    "id": "vnexpress-3",
+    "title": "Bitcoin vượt mốc 100,000 USD",
+    "link": "https://vnexpress.net/bitcoin-vuot-moc-100000-usd.html",
+    "description": "Giá Bitcoin đạt mức cao kỷ lục mới trong phiên giao dịch hôm nay",
+    "source": "VnExpress",
+    "category": "Kinh tế",
+    "pubDate": "01/05/2026 13:45",
+    "collectedAt": "01/05/2026 16:00"
   }
 ]
