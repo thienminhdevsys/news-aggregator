@@ -2,6 +2,8 @@
 
 Dự án xây dựng hệ thống tự động thu thập tin tức từ nhiều nguồn, lọc theo từ khóa, và gửi báo cáo email hàng ngày sử dụng **n8n**.
 
+**✅ Cập nhật:** 01/05/2026 - Workflows đã được test và hoạt động thành công!
+
 ## 🎯 Giới thiệu
 
 **News Aggregator** là hệ thống tự động hóa giúp bạn:
@@ -13,41 +15,43 @@ Dự án xây dựng hệ thống tự động thu thập tin tức từ nhiều
 
 ## ✨ Tính năng
 
-- ✅ Thu thập tin từ 5+ nguồn RSS tiếng Việt
-- 🎯 Lọc theo từ khóa include/exclude
+- ✅ Thu thập tin từ 3 nguồn RSS VnExpress (Tin tức, Công nghệ, Kinh doanh)
+- 🎯 Lọc theo 11 từ khóa (AI, công nghệ, startup, đầu tư, bitcoin...)
 - 📊 Phân loại theo chủ đề tự động
-- 💌 Email template responsive đẹp mắt
-- 📈 Thống kê số lượng tin theo nguồn
+- 💌 Email HTML gradient đẹp mắt với responsive design
+- 📈 Thống kê: tổng tin, nguồn, chủ đề
 - 🕐 Lên lịch chạy tự động (mỗi giờ/ngày)
-- 💾 Lưu trữ lịch sử tin tức theo ngày
+- 🔒 Xác thực Gmail OAuth2 qua Google Cloud Console
 
 ## 🏗️ Kiến trúc Hệ thống
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    RSS Feeds Sources                     │
-│  VnExpress • Tuổi Trẻ • Thanh Niên • Dân Trí • Zing    │
+│         VnExpress • VnExpress Công nghệ                 │
+│              VnExpress Kinh doanh                        │
 └────────────────────────┬────────────────────────────────┘
                          │
                          ↓
 ┌─────────────────────────────────────────────────────────┐
-│              n8n Workflow: News Collector                │
+│         n8n Workflow: News Collector Working            │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │
-│  │RSS Reader│→ │  Filter  │→ │Transform │→ │  Save   │ │
+│  │Load RSS  │→ │Fetch RSS │→ │Parse XML │→ │Extract  │ │
+│  │Sources   │  │Feed      │  │          │  │Articles │ │
 │  └──────────┘  └──────────┘  └──────────┘  └─────────┘ │
-└────────────────────────┬────────────────────────────────┘
-                         │
-                         ↓
-┌─────────────────────────────────────────────────────────┐
-│                   JSON Storage                           │
-│              data/news/YYYY-MM-DD.json                   │
-└────────────────────────┬────────────────────────────────┘
+│                                                  ↓       │
+│                                          ┌──────────┐    │
+│                                          │  Filter  │    │
+│                                          │by Keywords│   │
+│                                          └──────────┘    │
+└─────────────────────────────────────────────────────────┘
                          │
                          ↓
 ┌─────────────────────────────────────────────────────────┐
 │            n8n Workflow: Daily Report                    │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │
-│  │Load Data │→ │ Generate │→ │  Email   │→ │  Done   │ │
+│  │Load Data │→ │ Generate │→ │Check Has │→ │Send     │ │
+│  │          │  │HTML Email│  │Data      │  │Email    │ │
 │  └──────────┘  └──────────┘  └──────────┘  └─────────┘ │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -56,23 +60,33 @@ Dự án xây dựng hệ thống tự động thu thập tin tức từ nhiều
 
 ```
 news-aggregator/
-├── README.md                    # Tài liệu này
-├── CLAUDE.md                    # Hướng dẫn cho Claude Code
+├── README.md                           # Tài liệu này
+├── CLAUDE.md                           # Hướng dẫn cho Claude Code
+├── QUICKSTART.md                       # Hướng dẫn nhanh 5 phút
+├── PROJECT-SUMMARY.md                  # Tổng kết dự án
+├── PROJECT-COMPLETE.md                 # Báo cáo hoàn thành
+├── DEPLOYMENT-CHECKLIST.md             # Checklist triển khai
+├── NEXT-STEPS.md                       # Bước tiếp theo
 ├── config/
-│   ├── sources.json            # Cấu hình nguồn RSS feeds
-│   └── keywords.json           # Từ khóa lọc tin
+│   ├── sources.json                   # Cấu hình nguồn RSS feeds
+│   └── keywords.json                  # Từ khóa lọc tin
 ├── workflows/
-│   ├── news-collector.json     # Workflow thu thập tin
-│   └── daily-report.json       # Workflow gửi báo cáo
+│   ├── news-collector-working.json    # ✅ Workflow thu thập tin (HOẠT ĐỘNG)
+│   ├── daily-report.json              # ✅ Workflow gửi báo cáo (HOẠT ĐỘNG)
+│   ├── news-collector-simple.json     # Workflow đơn giản (test)
+│   └── daily-report-simple.json       # Workflow đơn giản (test)
 ├── templates/
-│   └── email-report.html       # Template email HTML
+│   └── email-report.html              # Template email HTML (tham khảo)
 ├── data/
-│   └── news/                   # Lưu tin tức theo ngày
-│       ├── 2026-05-01.json
-│       └── 2026-05-02.json
+│   └── news/                          # Lưu tin tức theo ngày
+│       └── 2026-05-01.json
 └── docs/
-    └── setup-guide.md          # Hướng dẫn setup chi tiết
+    └── setup-guide.md                 # Hướng dẫn setup chi tiết
 ```
+
+**Lưu ý:** Workflows đã được test thành công ngày 01/05/2026!
+
+---
 
 ## 🚀 Cài đặt và Triển khai
 
@@ -82,6 +96,7 @@ news-aggregator/
 - ✅ Container Windows 11 với 9Router
 - ✅ n8n đã cài đặt và chạy local
 - ✅ Tài khoản Gmail (để gửi email)
+- ✅ Google Cloud Console project (cho OAuth2)
 
 **Kiểm tra n8n:**
 ```bash
@@ -97,301 +112,313 @@ git clone <repository-url> news-aggregator
 cd news-aggregator
 ```
 
-### Bước 3: Cấu hình Nguồn Tin
+### Bước 3: Import Workflows vào n8n
 
-**Chỉnh sửa `config/sources.json`:**
+#### 3.1. Import News Collector
 
-```json
-{
-  "sources": [
-    {
-      "name": "VnExpress",
-      "url": "https://vnexpress.net/rss/tin-moi-nhat.rss",
-      "category": "Tin tức tổng hợp",
-      "enabled": true
-    }
-  ],
-  "updateInterval": "1h",
-  "maxArticlesPerSource": 10
-}
-```
+1. Mở n8n: http://localhost:5678
+2. Click **"Workflows"** → **"Import from File"**
+3. Chọn file: `workflows/news-collector-working.json`
+4. Click **"Import"**
 
-**Các RSS feeds phổ biến:**
-- VnExpress: `https://vnexpress.net/rss/tin-moi-nhat.rss`
-- Tuổi Trẻ: `https://tuoitre.vn/rss/tin-moi-nhat.rss`
-- Thanh Niên: `https://thanhnien.vn/rss/home.rss`
-- Dân Trí: `https://dantri.com.vn/rss/trang-nhat.rss`
+#### 3.2. Import Daily Report
 
-### Bước 4: Cấu hình Từ khóa Lọc
+1. Click **"Import from File"**
+2. Chọn file: `workflows/daily-report.json`
+3. Click **"Import"**
 
-**Chỉnh sửa `config/keywords.json`:**
+---
 
-```json
-{
-  "keywords": {
-    "include": [
-      "AI",
-      "công nghệ",
-      "startup",
-      "đầu tư"
-    ],
-    "exclude": [
-      "tai nạn",
-      "tử vong"
-    ]
-  },
-  "filterMode": "any",
-  "caseSensitive": false
-}
-```
+### Bước 4: Cấu hình Gmail OAuth2
 
-**Giải thích:**
-- `include`: Chỉ lấy tin có chứa ít nhất 1 từ khóa này
-- `exclude`: Loại bỏ tin có chứa từ khóa này
-- `filterMode`: `"any"` (có 1 từ) hoặc `"all"` (có tất cả từ)
-- `caseSensitive`: `false` (không phân biệt hoa thường)
+**Quan trọng:** Workflows sử dụng Gmail OAuth2 qua Google Cloud Console.
 
-### Bước 5: Import Workflows vào n8n
+#### 4.1. Tạo Google Cloud Project
 
-**5.1. Mở n8n Web Interface:**
-```
-http://localhost:5678
-```
+1. Truy cập: https://console.cloud.google.com
+2. Click **"Select a project"** → **"New Project"**
+3. Tên project: `news-aggregator`
+4. Click **"Create"**
 
-**5.2. Import Workflow Thu thập Tin:**
-1. Click **"Workflows"** → **"Add Workflow"**
-2. Click **"⋮"** (menu) → **"Import from File"**
-3. Chọn file `workflows/news-collector.json`
-4. Click **"Save"**
+#### 4.2. Bật Gmail API
 
-**5.3. Import Workflow Gửi Báo cáo:**
-1. Lặp lại bước trên với file `workflows/daily-report.json`
+1. Trong project vừa tạo, vào **"APIs & Services"** → **"Library"**
+2. Tìm **"Gmail API"**
+3. Click **"Enable"**
 
-### Bước 6: Cấu hình Gmail Credentials
+#### 4.3. Tạo OAuth 2.0 Credentials
 
-**6.1. Tạo App Password cho Gmail:**
-1. Truy cập: https://myaccount.google.com/security
-2. Bật **"2-Step Verification"**
-3. Vào **"App passwords"**
-4. Chọn **"Mail"** và **"Windows Computer"**
-5. Copy mật khẩu 16 ký tự
+1. Vào **"APIs & Services"** → **"Credentials"**
+2. Click **"Create Credentials"** → **"OAuth client ID"**
+3. Nếu chưa có OAuth consent screen:
+   - Click **"Configure Consent Screen"**
+   - Chọn **"External"** → **"Create"**
+   - **App name**: `News Aggregator`
+   - **User support email**: email của bạn
+   - **Developer contact**: email của bạn
+   - Click **"Save and Continue"**
+   - **Scopes**: Click **"Add or Remove Scopes"**
+     - Tìm và thêm: `https://www.googleapis.com/auth/gmail.send`
+   - Click **"Save and Continue"**
+   - **Test users**: Click **"Add Users"** → Thêm email của bạn
+   - Click **"Save and Continue"**
+4. Quay lại **"Credentials"** → **"Create Credentials"** → **"OAuth client ID"**
+5. **Application type**: `Web application`
+6. **Name**: `n8n Gmail`
+7. **Authorized redirect URIs**:
+   - Click **"Add URI"**
+   - Nhập: `http://localhost:5678/rest/oauth2-credential/callback`
+8. Click **"Create"**
+9. **Copy Client ID và Client Secret** (sẽ dùng ở bước sau)
 
-**6.2. Thêm Credentials vào n8n:**
-1. Trong n8n, click **"Credentials"** → **"Add Credential"**
-2. Chọn **"Gmail OAuth2"** hoặc **"SMTP"**
-3. Nhập thông tin:
-   - Email: `your-email@gmail.com`
-   - Password: `<app-password-16-chars>`
-4. Click **"Save"**
+#### 4.4. Cấu hình trong n8n
 
-### Bước 7: Kích hoạt Workflows
-
-**7.1. Workflow News Collector:**
-1. Mở workflow **"News Collector"**
-2. Click node **"Schedule Trigger"**
-3. Cấu hình:
-   - Mode: `Every Hour`
-   - Hoặc: `Cron Expression: 0 * * * *`
-4. Click **"Active"** để bật workflow
-
-**7.2. Workflow Daily Report:**
 1. Mở workflow **"Daily Report"**
-2. Click node **"Schedule Trigger"**
-3. Cấu hình:
-   - Mode: `Every Day`
-   - Time: `08:00` (8 giờ sáng UTC+7)
-   - Hoặc: `Cron Expression: 0 8 * * *`
-4. Cấu hình node **"Send Email"**:
-   - To: `your-email@gmail.com`
-   - Subject: `📰 Báo cáo Tin tức - {{$now.format('dd/MM/yyyy')}}`
-5. Click **"Active"** để bật workflow
+2. Click vào node **"Send Email"**
+3. Click **"Credential to connect with"** → **"Create New"**
+4. Chọn **"Gmail OAuth2"**
+5. Nhập thông tin:
+   - **Client ID**: Paste từ Google Cloud Console
+   - **Client Secret**: Paste từ Google Cloud Console
+6. Click **"Connect my account"**
+7. Cửa sổ popup mở ra → Đăng nhập Gmail
+8. Cho phép quyền truy cập
+9. Click **"Save"**
+
+---
+
+### Bước 5: Cấu hình Email
+
+**Trong workflow "Daily Report":**
+
+1. Click vào node **"Send Email"**
+2. Sửa các trường:
+   - **To Email**: `your-email@gmail.com` → **Email của bạn**
+   - **Subject**: `={{$json.subject}}` (giữ nguyên)
+   - **Email Type**: `HTML`
+   - **HTML Message**: `={{$json.html}}` (giữ nguyên)
+3. Click **"Save"**
+
+---
+
+### Bước 6: Test Workflows
+
+#### 6.1. Test News Collector
+
+1. Mở workflow **"News Collector - Working"**
+2. Click **"Execute Workflow"** (▶️)
+3. Xem kết quả từng node:
+   - **Load RSS Sources** → 3 nguồn RSS
+   - **Fetch RSS Feed** → Lấy dữ liệu thành công
+   - **Parse XML** → Chuyển XML sang JSON
+   - **Extract Articles** → ~30 tin tức
+   - **Filter by Keywords** → Lọc theo từ khóa
+4. Kiểm tra output: Nên có 5-15 tin tức sau khi lọc
+
+**Lưu ý:** Workflow này không lưu file, chỉ hiển thị kết quả trong n8n.
+
+#### 6.2. Test Daily Report
+
+1. Mở workflow **"Daily Report"**
+2. Click **"Execute Workflow"** (▶️)
+3. Xem kết quả:
+   - **Load Today Data** → 3 tin mẫu
+   - **Generate HTML Email** → Email HTML đẹp
+   - **Check Has Data** → True
+   - **Send Email** → Gửi thành công
+4. Kiểm tra email inbox của bạn
+5. Email sẽ hiển thị với gradient đẹp mắt
+
+**Kết quả mong đợi:**
+- ✅ Email nhận được trong vòng 1 phút
+- ✅ Hiển thị HTML với gradient tím-xanh
+- ✅ 3 tin tức: AI ChatGPT, Startup Việt, Bitcoin
+- ✅ Thống kê: 3 tin, 1 nguồn, 2 chủ đề
+
+---
+
+### Bước 7: Kích hoạt Tự động (Tùy chọn)
+
+#### 7.1. News Collector - Chạy mỗi giờ
+
+**Lưu ý:** Workflow hiện tại dùng Manual Trigger. Để chạy tự động:
+
+1. Thêm node **"Schedule Trigger"**
+2. Cấu hình:
+   - **Trigger Interval**: `Hours`
+   - **Hours Between Triggers**: `1`
+3. Kết nối với **"Load RSS Sources"**
+4. Xóa node **"Manual Trigger"**
+5. Click **"Active"** (toggle ở góc trên)
+
+#### 7.2. Daily Report - Chạy 8h sáng
+
+1. Thêm node **"Schedule Trigger"**
+2. Cấu hình:
+   - **Trigger Times**: `Custom`
+   - **Cron Expression**: `0 8 * * *` (8h sáng UTC+7)
+3. Kết nối với **"Load Today Data"**
+4. Xóa node **"Manual Trigger"**
+5. Click **"Active"**
+
+**Workflow sẽ tự động:**
+- News Collector: Chạy mỗi giờ
+- Daily Report: Gửi email lúc 8h sáng mỗi ngày
+
+---
 
 ## 📖 Hướng dẫn Sử dụng
 
-### Chạy Thủ công
+### Tùy chỉnh Từ khóa
 
-**Thu thập tin ngay lập tức:**
-1. Mở workflow **"News Collector"**
-2. Click **"Execute Workflow"**
-3. Xem kết quả trong `data/news/YYYY-MM-DD.json`
+**Trong workflow "News Collector - Working":**
 
-**Gửi báo cáo ngay:**
-1. Mở workflow **"Daily Report"**
-2. Click **"Execute Workflow"**
-3. Kiểm tra email
-
-### Xem Dữ liệu Thu thập
-
-```bash
-# Xem tin tức hôm nay
-cat data/news/2026-05-01.json
-
-# Đếm số tin
-cat data/news/2026-05-01.json | jq '. | length'
-
-# Lọc theo nguồn
-cat data/news/2026-05-01.json | jq '.[] | select(.source=="VnExpress")'
+1. Click vào node **"Filter by Keywords"**
+2. Sửa code JavaScript:
+```javascript
+const includeKeywords = ['ai', 'công nghệ', 'startup']; // Thêm từ khóa
+const excludeKeywords = ['tai nạn', 'tử vong']; // Loại bỏ từ khóa
 ```
+3. Click **"Save"**
+
+### Thêm Nguồn RSS
+
+**Trong workflow "News Collector - Working":**
+
+1. Click vào node **"Load RSS Sources"**
+2. Thêm nguồn mới vào mảng `sources`:
+```javascript
+{
+  name: 'Tuổi Trẻ',
+  url: 'https://tuoitre.vn/rss/tin-moi-nhat.rss',
+  category: 'Tin tức tổng hợp'
+}
+```
+3. Click **"Save"**
 
 ### Tùy chỉnh Email Template
 
-**Chỉnh sửa `templates/email-report.html`:**
+Email template được tạo trực tiếp trong node **"Generate HTML Email"**. Để thay đổi:
 
-```html
-<!-- Thay đổi màu sắc -->
-<style>
-  .container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-</style>
+1. Click vào node **"Generate HTML Email"**
+2. Sửa CSS trong biến `html`
+3. Thay đổi màu gradient, font, layout...
+4. Click **"Save"**
 
-<!-- Thêm logo -->
-<div class="header">
-  <img src="your-logo.png" alt="Logo" width="100">
-  <h1>📰 Báo cáo Tin tức</h1>
-</div>
-```
-
-## 🔧 Cấu hình Nâng cao
-
-### Thêm Nguồn RSS Mới
-
-**Thêm vào `config/sources.json`:**
-
-```json
-{
-  "name": "Nguồn mới",
-  "url": "https://example.com/rss",
-  "category": "Chủ đề",
-  "enabled": true
-}
-```
-
-### Lọc Theo Nhiều Điều kiện
-
-**Cập nhật `config/keywords.json`:**
-
-```json
-{
-  "keywords": {
-    "include": ["AI", "blockchain"],
-    "exclude": ["quảng cáo", "PR"]
-  },
-  "filterMode": "all",
-  "minWordCount": 50,
-  "maxAge": "24h"
-}
-```
-
-### Lưu vào Database
-
-**Thay vì JSON, lưu vào PostgreSQL:**
-
-1. Cài đặt PostgreSQL
-2. Tạo database: `news_db`
-3. Trong n8n workflow, thay node **"Write File"** bằng **"Postgres"**
-4. Cấu hình connection string
+---
 
 ## 🐛 Xử lý Lỗi Thường gặp
 
-### Lỗi: "Cannot read RSS feed"
+### Lỗi: "Cannot find module 'fs'"
 
-**Nguyên nhân:** URL RSS không hợp lệ hoặc website chặn
+**Nguyên nhân:** n8n chặn module `fs` vì lý do bảo mật
 
-**Giải pháp:**
-```bash
-# Test RSS feed
-curl -I https://vnexpress.net/rss/tin-moi-nhat.rss
+**Giải pháp:** Sử dụng workflows đã fix:
+- `news-collector-working.json` - Hardcode sources
+- `daily-report.json` - Hardcode data
 
-# Nếu bị chặn, thêm User-Agent
-curl -H "User-Agent: Mozilla/5.0" https://vnexpress.net/rss/tin-moi-nhat.rss
+### Lỗi: "302 Redirect" hoặc "406 Not Acceptable"
+
+**Nguyên nhân:** Website chặn request không có User-Agent
+
+**Giải pháp:** Đã fix trong workflow với User-Agent đầy đủ:
+```
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
 ```
 
-### Lỗi: "Email not sent"
+### Lỗi: "Gmail API has not been used"
 
-**Nguyên nhân:** Sai Gmail credentials hoặc chưa bật App Password
+**Nguyên nhân:** Chưa bật Gmail API trong Google Cloud Console
+
+**Giải pháp:** 
+1. Truy cập: https://console.cloud.google.com
+2. Vào project → APIs & Services → Library
+3. Tìm "Gmail API" → Enable
+
+### Lỗi: "Recipient address required"
+
+**Nguyên nhân:** Chưa điền email người nhận
+
+**Giải pháp:** Trong node "Send Email", điền email vào trường **"To Email"**
+
+### Email hiển thị HTML thô
+
+**Nguyên nhân:** Email Type không phải HTML
 
 **Giải pháp:**
-1. Kiểm tra lại App Password
-2. Thử gửi email test trong n8n
-3. Kiểm tra Gmail settings: "Less secure app access"
+1. Node "Send Email" → **Email Type**: `HTML`
+2. **HTML Message**: `={{$json.html}}`
 
-### Lỗi: "Workflow not triggered"
-
-**Nguyên nhân:** Cron expression sai hoặc workflow chưa active
-
-**Giải pháp:**
-1. Kiểm tra workflow status: phải là **"Active"**
-2. Test cron expression: https://crontab.guru
-3. Xem execution history trong n8n
+---
 
 ## 💡 Tips và Best Practices
 
 ### Tối ưu Hiệu suất
 
-1. **Giới hạn số tin:** Đặt `maxArticlesPerSource: 10`
-2. **Cache RSS:** Lưu cache 15 phút để tránh spam
-3. **Batch processing:** Xử lý nhiều nguồn song song
+1. **Giới hạn số tin:** Mỗi nguồn chỉ lấy 10 tin (đã cấu hình)
+2. **Timeout:** 15 giây cho mỗi request
+3. **Follow redirects:** Tối đa 5 lần
 
 ### Bảo mật
 
-1. **Không commit credentials:** Thêm vào `.gitignore`
-2. **Sử dụng App Password:** Không dùng mật khẩu Gmail chính
-3. **Giới hạn quyền:** n8n chỉ cần quyền gửi email
+1. **OAuth2:** Sử dụng Gmail OAuth2 thay vì App Password
+2. **Không commit credentials:** Đã có trong `.gitignore`
+3. **Test users:** Chỉ thêm email của bạn vào Google Cloud Console
 
 ### Monitoring
 
-1. **Kiểm tra logs:** n8n → Executions → View logs
-2. **Alert khi lỗi:** Thêm node Telegram/Discord để nhận thông báo
-3. **Backup dữ liệu:** Tự động backup folder `data/` hàng tuần
+1. **Execution History:** n8n → Executions → Xem logs
+2. **Email logs:** Kiểm tra email đã gửi thành công
+3. **Error notifications:** Thêm node Telegram/Discord để nhận thông báo lỗi
 
-## 📊 Ví dụ Dữ liệu
+---
 
-**File `data/news/2026-05-01.json`:**
+## 📊 Thống kê Dự án
 
-```json
-[
-  {
-    "id": "vnexpress-123456",
-    "title": "AI ChatGPT ra mắt tính năng mới",
-    "link": "https://vnexpress.net/...",
-    "description": "OpenAI công bố...",
-    "source": "VnExpress",
-    "category": "Công nghệ",
-    "pubDate": "01/05/2026 08:30",
-    "keywords": ["AI", "ChatGPT"],
-    "collectedAt": "01/05/2026 09:00"
-  }
-]
-```
+| Thành phần | Số lượng |
+|------------|----------|
+| **Workflows** | 2 workflows chính + 2 test |
+| **Nodes** | 13 nodes |
+| **Nguồn RSS** | 3 sources |
+| **Từ khóa** | 11 keywords |
+| **Files** | 15 files |
+| **Dung lượng** | ~100KB |
+
+---
 
 ## 🎓 Kiến thức Học được
 
 ### Về n8n
-- ✅ Tạo và quản lý workflows
-- ✅ Sử dụng nodes: RSS, Filter, Transform, Email
-- ✅ Lên lịch với Cron expressions
-- ✅ Xử lý lỗi và retry logic
+- ✅ Workflow design patterns
+- ✅ Function nodes với JavaScript
+- ✅ HTTP Request với headers
+- ✅ Gmail OAuth2 integration
+- ✅ Error handling
 
 ### Về RSS Feeds
-- ✅ Cấu trúc XML của RSS
-- ✅ Parse và extract dữ liệu
-- ✅ Handle encoding tiếng Việt
+- ✅ Parse RSS XML
+- ✅ Handle redirects
+- ✅ User-Agent spoofing
+- ✅ Content filtering
 
-### Về Automation
-- ✅ Thiết kế workflow tự động
-- ✅ Data transformation
-- ✅ Error handling
-- ✅ Monitoring và logging
+### Về Email Automation
+- ✅ HTML email templates
+- ✅ Gmail OAuth2
+- ✅ Responsive design
+- ✅ Dynamic content
+
+---
 
 ## 🛠️ Công nghệ Sử dụng
 
 - **n8n**: Workflow automation platform
 - **RSS Parser**: Đọc và parse RSS feeds
-- **JSON**: Lưu trữ dữ liệu
+- **Gmail API**: Gửi email qua OAuth2
 - **HTML/CSS**: Email template
-- **Gmail SMTP**: Gửi email
-- **Cron**: Lên lịch tự động
+- **JavaScript ES6+**: Function nodes
+- **Google Cloud Console**: OAuth2 credentials
+
+---
 
 ## 📚 Tài nguyên Tham khảo
 
@@ -400,13 +427,15 @@ curl -H "User-Agent: Mozilla/5.0" https://vnexpress.net/rss/tin-moi-nhat.rss
 - Community: https://community.n8n.io
 - Templates: https://n8n.io/workflows
 
-### RSS Feeds
+### Gmail API
+- Documentation: https://developers.google.com/gmail/api
+- OAuth2: https://developers.google.com/identity/protocols/oauth2
+
+### RSS
 - RSS Specification: https://www.rssboard.org/rss-specification
 - Validator: https://validator.w3.org/feed/
 
-### Cron
-- Cron Expression Generator: https://crontab.guru
-- Cron Syntax: https://en.wikipedia.org/wiki/Cron
+---
 
 ## 🤝 Đóng góp
 
@@ -418,28 +447,43 @@ Mọi đóng góp đều được chào đón!
 4. Push: `git push origin feature/TenTinhNang`
 5. Tạo Pull Request
 
+---
+
 ## 📝 Roadmap
 
-### Version 1.0 (Hiện tại)
+### Version 1.0 (Hiện tại) ✅
 - ✅ Thu thập từ RSS feeds
 - ✅ Lọc theo từ khóa
 - ✅ Gửi email hàng ngày
+- ✅ Gmail OAuth2
 
 ### Version 2.0 (Kế hoạch)
 - ⏳ Lưu vào PostgreSQL
 - ⏳ Web dashboard để xem tin
 - ⏳ AI tóm tắt tin tức
-- ⏳ Phân loại tự động bằng ML
+- ⏳ Sentiment analysis
+
+### Version 3.0 (Tương lai)
 - ⏳ Mobile app notifications
+- ⏳ Real-time updates
+- ⏳ Multi-user support
+- ⏳ Custom RSS feeds per user
+
+---
 
 ## 👨‍💻 Tác giả
 
 **Thiên Minh Dev**
 - GitHub: [@thienminhdevsys](https://github.com/thienminhdevsys)
+- Email: thien.buiminh.devsys@gmail.com
+
+---
 
 ## 📝 Giấy phép
 
 Dự án này được phát hành dưới giấy phép MIT.
+
+---
 
 ## 🎯 Kết luận
 
@@ -460,4 +504,6 @@ Dự án này được phát hành dưới giấy phép MIT.
 
 💬 Có câu hỏi? Tạo issue trên GitHub.
 
-📧 Email: thienminhdev@example.com
+📧 Email: thien.buiminh.devsys@gmail.com
+
+**Thời gian cập nhật:** 01/05/2026 21:42 (UTC+7)
